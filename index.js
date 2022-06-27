@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 8080;
 const app = express();
 
 app.use(express.json());
-app.use("/p_b", accessRouter);
-app.use("/p_b", accountRouter);
+app.use("/app", accessRouter);
+app.use("/app", accountRouter);
 
 app.listen(PORT, () => console.log(`server started on post ${PORT}`));
