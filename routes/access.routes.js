@@ -1,11 +1,11 @@
-const Router = require("express");
-const router = new Router();
-const accessController = require("../controller/access.controller");
+// const Router = require("express");
+// const router = new Router();
+// const accessController = require("../controller/access.controller");
 
-router.post("/access/:id", accessController.requestAccess);
-router.put("/access", accessController.updateAccess);
+// router.post("/access/:id", accessController.requestAccess);
+// router.put("/access", accessController.updateAccess);
 
-// router.get("/access", accessController.getAllAccess);
-// router.get("/access/:id", accessController.getOneAccess);
+// // router.get("/access", accessController.getAllAccess);
+// // router.get("/access/:id", accessController.getOneAccess);
 
-module.exports = router;
+// module.exports = router;

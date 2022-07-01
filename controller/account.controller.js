@@ -73,16 +73,16 @@ class accountController {
       );
       const user = data.rows;
       if (user.length === 0) {
-        res.status(400).json({ error: "User in not exist" });
+        res.json({ error: "User is not exist" });
       } else {
         if (user[0].password == password) {
-          res.status(200).json({
+          res.json({
             message: "User signed in",
             isAdmin: false,
             id: user[0].id_account,
           });
         } else {
-          res.status(400).json({ error: "Incorrect password" });
+          res.json({ error: "Incorrect password" });
         }
       }
     } catch (err) {
@@ -117,21 +117,19 @@ class accountController {
   }
 
   async getOneAccount(req, res) {
-    const { id_account } = req.params.id;
+    let id_account = req.params.id;
+    id_account = id_account.slice(1);
     const oneAccount = await db.query(
-      `select * from account a
-      left join person p on p.id_person = a.id_person
-      where id_account = $1 `,
-      id_account
+      "select * from account a left join person p on p.id_person = a.id_person where id_account = $1",
+      [id_account]
     );
     const phone_numbers = await db.query(
-      `select * from phone_number 
-      where id_person = $1 `,
-      id_account
+      "select phone_number from phone_number where id_person = $1",
+      [id_account]
     );
     res.json({
       mainInfo: oneAccount.rows[0],
-      phoneNumbers: phone_numbers.rows[0],
+      phoneNumbers: phone_numbers.rows,
     });
   }
 
