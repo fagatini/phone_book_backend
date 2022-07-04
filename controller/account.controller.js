@@ -3,41 +3,39 @@ const db = require("../bd");
 class accountController {
   async register(req, res) {
     const {
-      id_pers,
+      email,
+      password,
       first_name,
       midle_name,
       sec_name,
       birthdate,
       job_phone_num,
+      phone_number,
+      is_show_bd,
+      is_show_num,
       department,
       post,
       workplace,
       about_me,
-      id_acc,
-      email,
-      password,
-      is_show_bd,
-      is_show_num,
       photo_url,
-      id_deleted,
-      is_admin,
     } = req.body;
     try {
-      // const id = 'select max(id)' // сделать запрос для поиска максимального id и для access
+      let id = await db.query("SELECT max(id_account) FROM account");
+      id = id.rows[0].max + 1;
       const data = await db.query(`SELECT * FROM account WHERE email= $1;`, [
         email,
       ]);
+
       const arr = data.rows;
       if (arr.length != 0) {
-        return res.status(400).json({
-          error: "Email already used",
+        return res.json({
+          error: "Email is already used",
         });
       } else {
-        const newAcc = await db.query(
-          `insert into person values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
-          insert into account values ($11, $12, $13, $14, $15, $16, $17, $18, $19);`,
+        const newPers = await db.query(
+          `INSERT INTO person values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`,
           [
-            id_pers,
+            id,
             first_name,
             midle_name,
             sec_name,
@@ -47,17 +45,34 @@ class accountController {
             post,
             workplace,
             about_me,
-            id_acc,
-            id_pers,
+          ]
+        );
+        const newAcc = await db.query(
+          `INSERT INTO account values ($1, $2, $3, $4, $5, $6, $7, $8, $9);`,
+          [
+            id,
+            id,
             email,
             password,
             is_show_bd,
             is_show_num,
             photo_url,
-            id_deleted,
-            is_admin,
+            false,
+            false,
           ]
         );
+        console.log(phone_number);
+        console.log(phone_number.length);
+        phone_number.map(async (number, index) => {
+          const newPhone = await db.query(
+            `insert into phone_number values ($1,$2);`,
+            [phone_number[index], id]
+          );
+        });
+        return res.json({
+          message: "new user created",
+          id: id,
+        });
       }
     } catch (err) {
       res.status(500).json({ error: "database error" });
