@@ -1,136 +1,6 @@
 const db = require("../bd");
 
 class accountController {
-  async register(req, res) {
-    const {
-      email,
-      password,
-      first_name,
-      midle_name,
-      sec_name,
-      birthdate,
-      job_phone_num,
-      phone_number,
-      is_show_bd,
-      is_show_num,
-      department,
-      post,
-      workplace,
-      about_me,
-      photo_url,
-    } = req.body;
-    try {
-      let id = await db.query("SELECT max(id_account) FROM account");
-      id = id.rows[0].max + 1;
-      const data = await db.query(`SELECT * FROM account WHERE email= $1;`, [
-        email,
-      ]);
-
-      const arr = data.rows;
-      if (arr.length != 0) {
-        return res.json({
-          error: "Email is already used",
-        });
-      } else {
-        const newPers = await db.query(
-          `INSERT INTO person values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`,
-          [
-            id,
-            first_name,
-            midle_name,
-            sec_name,
-            birthdate,
-            job_phone_num,
-            department,
-            post,
-            workplace,
-            about_me,
-          ]
-        );
-        const newAcc = await db.query(
-          `INSERT INTO account values ($1, $2, $3, $4, $5, $6, $7, $8, $9);`,
-          [
-            id,
-            id,
-            email,
-            password,
-            is_show_bd,
-            is_show_num,
-            photo_url,
-            false,
-            false,
-          ]
-        );
-        console.log(phone_number);
-        console.log(phone_number.length);
-        phone_number.map(async (number, index) => {
-          const newPhone = await db.query(
-            `insert into phone_number values ($1,$2);`,
-            [phone_number[index], id]
-          );
-        });
-        return res.json({
-          message: "new user created",
-          id: id,
-        });
-      }
-    } catch (err) {
-      res.status(500).json({ error: "database error" });
-    }
-  }
-
-  async loginUser(req, res) {
-    const { email, password } = req.body;
-    try {
-      const data = await db.query(
-        `SELECT id_account, email, password FROM account WHERE email = $1;`,
-        [email]
-      );
-      const user = data.rows;
-      if (user.length === 0) {
-        res.json({ error: "User is not exist" });
-      } else {
-        if (user[0].password == password) {
-          res.json({
-            message: "User signed in",
-            isAdmin: false,
-            id: user[0].id_account,
-          });
-        } else {
-          res.json({ error: "Incorrect password" });
-        }
-      }
-    } catch (err) {
-      res.status(500).json({ error: "database error" });
-    }
-  }
-
-  async loginAdmin(req, res) {
-    const { email, password } = req.body;
-    try {
-      const data = await db.query(
-        `SELECT id_account, email, password FROM account WHERE email = $1 and is_admin = true;`,
-        [email]
-      );
-      const user = data.rows;
-      if (user.length === 0) {
-        res.status(400).json({ error: "User in not exist" });
-      } else {
-        if (user[0].password == password) {
-          res.status(200).json({
-            message: "User signed in",
-            isAdmin: true,
-            id: user[0].id_account,
-          });
-        } else {
-          res.status(400).json({ error: "Incorrect password" });
-        }
-      }
-    } catch (err) {
-      res.status(500).json({ error: "database error" });
-    }
-  }
-
   async getOneAccount(req, res) {
     let id_account = req.params.id;
     id_account = id_account.slice(1);
@@ -150,37 +20,35 @@ class accountController {
 
   async getAllAccounts(req, res) {
     const oneAccount = await db.query(
-      `select * from account a
-      left join person p on p.id_person = a.id_person`
+      `select a.id_person, a.photo_url, p.first_name,p.midle_name, p.second_name from account a
+      left join person p on p.id_person = a.id_person order by a.id_person`
     );
     res.json(oneAccount.rows);
   }
 
   async editAccount(req, res) {
-    const { id } = req.params.id;
+    let id_account = req.params.id;
+    id_account = id_account.slice(1);
     const {
+      email,
+      password,
       first_name,
       midle_name,
       sec_name,
       birthdate,
       job_phone_num,
+      phone_number,
+      is_show_bd,
+      is_show_num,
       department,
       post,
       workplace,
       about_me,
-      email,
-      password,
-      is_show_bd,
-      is_show_num,
       photo_url,
-      id_deleted,
-      is_admin,
     } = req.body;
-    const newAcc = await db.query(
-      `UPDATE account set (id_person, first_name, midle_name, second_name, birthdate, job_phone_num, department, post, workplace, about_me) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
-      UPDATE account set (id_account,id_person,email,password,is_show_bd,is_show_num,photo_url,is_deleted_acc,is_admin) = ($11, $12, $13, $14, $15, $16, $17, $18, $19);`,
+    const updatedAcc = await db.query(
+      `UPDATE account SET (first_name, midle_name, second_name, birthdate, job_phone_num, department, post, workplace, about_me) = ($1, $2, $3, $4, $5, $6, $7, $8, $9) where id_person = $10`,
       [
-        id,
         first_name,
         midle_name,
         sec_name,
@@ -191,28 +59,26 @@ class accountController {
         workplace,
         about_me,
         id,
-        id,
-        email,
-        password,
-        is_show_bd,
-        is_show_num,
-        photo_url,
-        id_deleted,
-        is_admin,
       ]
     );
+    const updatedPers = await db.query(
+      `UPDATE person SET (email, password, is_show_bd, is_show_num, photo_url) = ($1, $2, $3, $4, $5) where id_person = $10`,
+      [email, password, is_show_bd, is_show_num, photo_url, id]
+    );
+
     res.json(account.rows[0]);
   }
 
-  // async deleteAccount(req, res) {
-  //   const { id } = req.params.id;
-  //   const { require_state } = req.body;
-  //   const account = await db.query(
-  //     "UPDATE account SET is_deleted_acc = $1 where id_account = $2 RETURNING *",
-  //     [require_state, id]
-  //   );
-  //   res.json(account.rows[0]);
-  // }
+  async deleteAccount(req, res) {
+    let id_account = req.params.id;
+    id_account = id_account.slice(1);
+    const { state } = req.body;
+
+    const changedAcc = await db.query(
+      `UPDATE account set is_deleted_acc = $1 where id_account = $2;`,
+      [state, id_account]
+    );
+  }
 
   async addNumber(req, res) {
     const { id } = req.params.id;
@@ -230,24 +96,6 @@ class accountController {
       "delete from phone_number where id_person = $1 and phone_number = $2",
       [id, number_for_delete]
     );
-  }
-
-  async updateAccess(req, res) {
-    const { id_giver } = req.params.id;
-    const { id, id_receiver, new_state, data } = req.body;
-    const new_access = await db.query(
-      "UPDATE access SET (id_access, id_giver, id_receiver, state, data",
-      [id, id_giver, id_receiver, new_state, data]
-    );
-  }
-
-  async getAllAccess(req, res) {
-    const { id_receiver } = req.params.id;
-    const allAccesses = await db.query(
-      `select * from access where id_receiver = $1`,
-      [id_receiver]
-    );
-    res.json(allAccesses.rows);
   }
 }
 
