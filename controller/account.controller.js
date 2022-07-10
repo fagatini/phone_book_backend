@@ -20,8 +20,10 @@ class accountController {
 
   async getAllAccounts(req, res) {
     const oneAccount = await db.query(
-      `select a.id_person, a.photo_url, p.first_name,p.midle_name, p.second_name from account a
-      left join person p on p.id_person = a.id_person order by a.id_person`
+      `select a.id_person, a.photo_url, p.first_name, p.midle_name, p.second_name from account a
+      left join person p on p.id_person = a.id_person 
+      where a.is_deleted_acc = false
+      order by a.id_person`
     );
     res.json(oneAccount.rows);
   }
@@ -46,27 +48,55 @@ class accountController {
       about_me,
       photo_url,
     } = req.body;
-    const updatedAcc = await db.query(
-      `UPDATE account SET (first_name, midle_name, second_name, birthdate, job_phone_num, department, post, workplace, about_me) = ($1, $2, $3, $4, $5, $6, $7, $8, $9) where id_person = $10`,
-      [
-        first_name,
-        midle_name,
-        sec_name,
-        birthdate,
-        job_phone_num,
-        department,
-        post,
-        workplace,
-        about_me,
-        id,
-      ]
-    );
-    const updatedPers = await db.query(
-      `UPDATE person SET (email, password, is_show_bd, is_show_num, photo_url) = ($1, $2, $3, $4, $5) where id_person = $10`,
-      [email, password, is_show_bd, is_show_num, photo_url, id]
-    );
+    try {
+      const data = await db.query(
+        `SELECT * FROM account WHERE email= $1 and id_account != $2;`,
+        [email, id_account]
+      );
 
-    res.json(account.rows[0]);
+      const arr = data.rows;
+      if (arr.length != 0) {
+        return res.json({
+          error: "Email is already used",
+        });
+      } else {
+        const updatedPers = await db.query(
+          `UPDATE person SET (first_name, midle_name, second_name, birthdate, job_phone_num, department, post, workplace, about_me) = ($1, $2, $3, $4, $5, $6, $7, $8, $9) where id_person = $10`,
+          [
+            first_name,
+            midle_name,
+            sec_name,
+            birthdate,
+            job_phone_num,
+            department,
+            post,
+            workplace,
+            about_me,
+            id_account,
+          ]
+        );
+        const updatedAcc = await db.query(
+          `UPDATE account SET (email, password, is_show_bd, is_show_num, photo_url) = ($1, $2, $3, $4, $5) where id_account = $6`,
+          [email, password, is_show_bd, is_show_num, photo_url, id_account]
+        );
+
+        const phones = await db.query(
+          `DELETE FROM phone_number WHERE id_person = $1`,
+          [id_account]
+        );
+
+        if (phone_number.length) {
+          await phone_number.forEach((element) => {
+            db.query(`INSERT INTO phone_number VALUES ($1,$2)`, [
+              element,
+              id_account,
+            ]);
+          });
+        }
+      }
+    } catch (err) {
+      res.status(500).json({ error: "database error" });
+    }
   }
 
   async deleteAccount(req, res) {
@@ -78,6 +108,8 @@ class accountController {
       `UPDATE account set is_deleted_acc = $1 where id_account = $2;`,
       [state, id_account]
     );
+
+    console.log(changedAcc);
   }
 
   async addNumber(req, res) {

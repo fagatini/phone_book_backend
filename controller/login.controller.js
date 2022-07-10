@@ -81,20 +81,24 @@ class loginController {
     const { email, password } = req.body;
     try {
       const data = await db.query(
-        `SELECT id_account, email, password FROM account WHERE email = $1;`,
+        `SELECT id_account, email, password, is_deleted_acc FROM account WHERE email = $1;`,
         [email]
       );
       const user = data.rows;
       if (user.length === 0) {
         res.json({ error: "User is not exist" });
       } else {
-        if (user[0].password == password) {
-          res.json({
-            message: "User signed in",
-            id: user[0].id_account,
-          });
+        if (user[0].is_deleted_acc === true) {
+          res.json({ error: "User deleted" });
         } else {
-          res.json({ error: "Incorrect password" });
+          if (user[0].password == password) {
+            res.json({
+              message: "User signed in",
+              id: user[0].id_account,
+            });
+          } else {
+            res.json({ error: "Incorrect password" });
+          }
         }
       }
     } catch (err) {

@@ -50,6 +50,16 @@ class accessController {
       res.json({ state: "notExist" });
     }
   }
+
+  async getAllAccessAdmin(req, res) {
+    const allAccesses = await db.query(
+      `select p.first_name, p.second_name, a.id_access, pt.first_name as recFN, pt.second_name as recSN, a.state, a.data from access a
+      left join person p on p.id_person = a.id_giver
+      left join person pt on pt.id_person = a.id_receiver
+      order by a.id_access`
+    );
+    res.json(allAccesses.rows);
+  }
 }
 
 module.exports = new accessController();

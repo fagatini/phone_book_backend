@@ -7,4 +7,6 @@ router.get("/account/access/:id", accessController.getAllAccess);
 router.post("/account/access/:id", accessController.getOneAccess);
 router.post("/accounts/access/:id", accessController.createAccess);
 
+router.get("/admin/accesses", accessController.getAllAccessAdmin);
+
 module.exports = router;
