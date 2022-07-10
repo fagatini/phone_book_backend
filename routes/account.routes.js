@@ -7,7 +7,4 @@ router.get("/accounts", accountController.getAllAccounts);
 router.post("/account/edit/:id", accountController.editAccount);
 router.put("/account/:id", accountController.deleteAccount);
 
-router.post("/account/:id", accountController.addNumber);
-router.delete("/account/:id", accountController.deleteNumber);
-
 module.exports = router;

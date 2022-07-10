@@ -79,12 +79,10 @@ class accountController {
           `UPDATE account SET (email, password, is_show_bd, is_show_num, photo_url) = ($1, $2, $3, $4, $5) where id_account = $6`,
           [email, password, is_show_bd, is_show_num, photo_url, id_account]
         );
-
         const phones = await db.query(
           `DELETE FROM phone_number WHERE id_person = $1`,
           [id_account]
         );
-
         if (phone_number.length) {
           await phone_number.forEach((element) => {
             db.query(`INSERT INTO phone_number VALUES ($1,$2)`, [
@@ -93,6 +91,9 @@ class accountController {
             ]);
           });
         }
+        return res.json({
+          message: "user changed",
+        });
       }
     } catch (err) {
       res.status(500).json({ error: "database error" });
@@ -107,26 +108,6 @@ class accountController {
     const changedAcc = await db.query(
       `UPDATE account set is_deleted_acc = $1 where id_account = $2;`,
       [state, id_account]
-    );
-
-    console.log(changedAcc);
-  }
-
-  async addNumber(req, res) {
-    const { id } = req.params.id;
-    const { new_number } = req.body;
-    const phone_num = await db.query(
-      "insert into phone_number values ($1,$2)",
-      [new_number, id]
-    );
-  }
-
-  async deleteNumber(req, res) {
-    const { id } = req.params.id;
-    const { number_for_delete } = req.body;
-    const phone_num = await db.query(
-      "delete from phone_number where id_person = $1 and phone_number = $2",
-      [id, number_for_delete]
     );
   }
 }
