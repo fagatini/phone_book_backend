@@ -19,13 +19,13 @@ class accountController {
   }
 
   async getAllAccounts(req, res) {
-    const oneAccount = await db.query(
+    const allAccount = await db.query(
       `select a.id_person, a.photo_url, p.first_name, p.midle_name, p.second_name from account a
       left join person p on p.id_person = a.id_person 
       where a.is_deleted_acc = false
       order by a.id_person`
     );
-    res.json(oneAccount.rows);
+    res.json(allAccount.rows);
   }
 
   async editAccount(req, res) {
@@ -109,6 +109,16 @@ class accountController {
       `UPDATE account set is_deleted_acc = $1 where id_account = $2;`,
       [state, id_account]
     );
+  }
+
+  async getDeletedAccs(req, res) {
+    const delAccount = await db.query(
+      `select a.id_person, a.photo_url, p.first_name, p.midle_name, p.second_name from account a
+      left join person p on p.id_person = a.id_person 
+      where a.is_deleted_acc = true
+      order by a.id_person`
+    );
+    res.json(delAccount.rows);
   }
 }
 

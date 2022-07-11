@@ -7,4 +7,6 @@ router.get("/accounts", accountController.getAllAccounts);
 router.post("/account/edit/:id", accountController.editAccount);
 router.put("/account/:id", accountController.deleteAccount);
 
+router.get("/admin/accounts", accountController.getDeletedAccs)
+
 module.exports = router;
